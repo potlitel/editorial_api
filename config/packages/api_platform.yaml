@@ -1,0 +1,9 @@
+api_platform:
+    # Habilitamos tanto el formato JSON-LD (REST por defecto) como GraphQL
+    formats:
+        jsonld: ['application/ld+json']
+        json: ['application/json']
+    graphql:
+        enabled: true # Aseguramos que GraphQL esté activo
+        # Los endpoints serán /api/graphql
+    # ... otras configuraciones
