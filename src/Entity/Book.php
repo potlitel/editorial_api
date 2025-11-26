@@ -2,52 +2,94 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Metadata\ApiResource;
 use App\Repository\BookRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups; // Importante para GraphQL
+// use ApiPlatform\Metadata\GraphQl\CollectionQuery;
+use ApiPlatform\Metadata\GraphQl\Query;
+use ApiPlatform\Metadata\GraphQl\Mutation;
+use ApiPlatform\Metadata\GraphQl\DeleteMutation;
 
+// 1. ANOTACIÓN DE EXPOSICIÓN A API PLATFORM / GRAPHQL
+#[ApiResource(
+    // Definimos los grupos de serialización que se usarán por defecto
+    normalizationContext: ['groups' => ['book:read', 'book:list']],
+    denormalizationContext: ['groups' => ['book:write']],
+
+    // OPERACIONES GRAPHQL CORREGIDAS
+    graphQlOperations: [
+        new Query(name: 'collectionQuery'), // AP automáticamente deduce que si no tiene URI es colección
+        new Query(name: 'itemQuery'),                       // Obtener un recurso por ID
+        new Mutation(name: 'create'),                       // Creación
+        new Mutation(name: 'update'),                       // Actualización
+        new DeleteMutation(name: 'delete'),                 // Eliminación
+    ]
+)]
 #[ORM\Entity(repositoryClass: BookRepository::class)]
 class Book
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    // Grupos: book:read (para detalle), book:list (para colecciones)
+    #[Groups(['book:read', 'book:list', 'author:read', 'series:read', 'review:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['book:read', 'book:list', 'book:write', 'author:read', 'series:read'])]
     private ?string $title = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, unique: true)] // Añadimos 'unique: true' a ISBN, si es necesario
+    #[Groups(['book:read', 'book:list', 'book:write'])]
     private ?string $isbn = null;
 
     #[ORM\Column]
+    #[Groups(['book:read', 'book:write'])]
     private ?\DateTimeImmutable $publicationDate = null;
+
+    // --- RELACIONES MANY-TO-ONE (Relaciones de Pertenencia) ---
 
     #[ORM\ManyToOne(inversedBy: 'books')]
     #[ORM\JoinColumn(nullable: false)]
+    // Exponemos la relación. Usamos el grupo 'book:read' para la carga,
+    // pero evitamos la recursividad usando el grupo 'author:list' en el Author
+    #[Groups(['book:read', 'book:write'])]
     private ?Author $author = null;
 
     #[ORM\ManyToOne(inversedBy: 'books')]
-    #[ORM\JoinColumn(nullable: false)]
+    // Hacemos que la Serie sea opcional
+    #[ORM\JoinColumn(nullable: true)]
+    #[Groups(['book:read', 'book:write'])]
     private ?Series $series = null;
+
+    // --- RELACIONES MANY-TO-MANY ---
 
     /**
      * @var Collection<int, Editor>
      */
     #[ORM\ManyToMany(targetEntity: Editor::class, inversedBy: 'books')]
+    // Exponemos esta colección solo en la vista de detalle ('book:read')
+    #[Groups(['book:read', 'book:write'])]
     private Collection $editors;
 
     /**
      * @var Collection<int, Genre>
      */
     #[ORM\ManyToMany(targetEntity: Genre::class, inversedBy: 'books')]
+    #[Groups(['book:read', 'book:write'])]
     private Collection $genres;
+
+    // --- RELACIONES ONE-TO-MANY (Relaciones Inversas) ---
 
     /**
      * @var Collection<int, Review>
      */
-    #[ORM\OneToMany(targetEntity: Review::class, mappedBy: 'book')]
+    #[ORM\OneToMany(targetEntity: Review::class, mappedBy: 'book', orphanRemoval: true)] // orphanRemoval: true para cascada en borrado
+    // Exponemos las reseñas. Usaremos un grupo específico ('review:list') en la entidad Review
+    #[Groups(['book:read'])]
     private Collection $reviews;
 
     public function __construct()
@@ -56,6 +98,8 @@ class Book
         $this->genres = new ArrayCollection();
         $this->reviews = new ArrayCollection();
     }
+
+    // --- Getters and Setters (omitiendo por brevedad, pero se mantienen todos) ---
 
     public function getId(): ?int
     {

@@ -1,40 +1,73 @@
 <?php
+// src/Entity/User.php
 
 namespace App\Entity;
 
+use ApiPlatform\Metadata\ApiResource;
 use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups; // ¡Importante!
+// use ApiPlatform\Metadata\GraphQl\CollectionQuery;
+use ApiPlatform\Metadata\GraphQl\Query;
+use ApiPlatform\Metadata\GraphQl\Mutation;
+use ApiPlatform\Metadata\GraphQl\DeleteMutation;
 
+#[ApiResource(
+    // Grupos que esta entidad expone
+    normalizationContext: ['groups' => ['user:read', 'user:list']],
+    denormalizationContext: ['groups' => ['user:write']],
+
+    // OPERACIONES GRAPHQL CORREGIDAS
+    graphQlOperations: [
+        new Query(name: 'collectionQuery'), // AP automáticamente deduce que si no tiene URI es colección
+        new Query(name: 'itemQuery'),                       // Obtener un recurso por ID
+        new Mutation(name: 'create'),                       // Creación
+        new Mutation(name: 'update'),                       // Actualización
+        new DeleteMutation(name: 'delete'),                 // Eliminación
+    ]
+)]
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 class User
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['user:read', 'user:list'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    // Dato sensible, visible solo en detalle para el usuario que lo consulta (o admin)
+    #[Groups(['user:read', 'user:write'])]
     private ?string $email = null;
 
     #[ORM\Column(length: 255)]
+    // Write-only: Nunca debe ser visible en la respuesta de lectura.
+    #[Groups(['user:write'])]
     private ?string $password = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['user:read', 'user:list', 'user:write'])]
     private ?string $username = null;
 
     /**
      * @var Collection<int, self>
      */
+    // Users being followed by this user (OWNING SIDE)
     #[ORM\ManyToMany(targetEntity: self::class, inversedBy: 'users')]
+    // Solo se expone en la vista de detalle. Los usuarios anidados usarán 'user:list'.
+    #[Groups(['user:read'])]
     private Collection $following;
 
     /**
      * @var Collection<int, self>
      */
+    // Users following this user (INVERSE SIDE / Followers)
     #[ORM\ManyToMany(targetEntity: self::class, mappedBy: 'following')]
-    private Collection $users;
+    // Solo se expone en la vista de detalle. Los usuarios anidados usarán 'user:list'.
+    #[Groups(['user:read'])]
+    private Collection $users; // Followers
 
     public function __construct()
     {

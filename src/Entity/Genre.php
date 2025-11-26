@@ -1,27 +1,54 @@
 <?php
+// src/Entity/Genre.php
 
 namespace App\Entity;
 
+use ApiPlatform\Metadata\ApiResource;
 use App\Repository\GenreRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups; // ¡Importante!
+// use ApiPlatform\Metadata\GraphQl\CollectionQuery;
+use ApiPlatform\Metadata\GraphQl\Query;
+use ApiPlatform\Metadata\GraphQl\Mutation;
+use ApiPlatform\Metadata\GraphQl\DeleteMutation;
 
+#[ApiResource(
+    // Grupos que esta entidad expone
+    normalizationContext: ['groups' => ['genre:read', 'genre:list']],
+    denormalizationContext: ['groups' => ['genre:write']],
+
+    // OPERACIONES GRAPHQL CORREGIDAS
+    graphQlOperations: [
+        new Query(name: 'collectionQuery'), // AP automáticamente deduce que si no tiene URI es colección
+        new Query(name: 'itemQuery'),                       // Obtener un recurso por ID
+        new Mutation(name: 'create'),                       // Creación
+        new Mutation(name: 'update'),                       // Actualización
+        new DeleteMutation(name: 'delete'),                 // Eliminación
+    ]
+)]
 #[ORM\Entity(repositoryClass: GenreRepository::class)]
 class Genre
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    // Expuesto en todos los grupos relevantes
+    #[Groups(['genre:read', 'genre:list', 'book:read', 'book:list'])]
     private ?int $id = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255)] // La entidad original usaba length: 255
+    #[Groups(['genre:read', 'genre:list', 'genre:write', 'book:read', 'book:list'])]
     private ?string $name = null;
 
     /**
      * @var Collection<int, Book>
      */
     #[ORM\ManyToMany(targetEntity: Book::class, mappedBy: 'genres')]
+    // La colección de libros solo se expone en la vista de detalle del Género.
+    // Usamos el grupo 'book:list' en Book para evitar el ciclo.
+    #[Groups(['genre:read'])]
     private Collection $books;
 
     public function __construct()
@@ -67,6 +94,7 @@ class Genre
     public function removeBook(Book $book): static
     {
         if ($this->books->removeElement($book)) {
+            // set the owning side to null (unless already changed)
             $book->removeGenre($this);
         }
 

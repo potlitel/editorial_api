@@ -88,5 +88,9 @@
             "allow-contrib": false,
             "require": "7.3.*"
         }
+    },
+    "require-dev": {
+        "doctrine/doctrine-fixtures-bundle": "*",
+        "fakerphp/faker": "^1.24"
     }
 }
