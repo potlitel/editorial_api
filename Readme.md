@@ -111,3 +111,26 @@ El siguiente hito será implementar la lógica de negocio avanzada:
 2.  **Autorización Avanzada (Field-Level Security):** Implementar la seguridad a nivel de campo (p. ej., solo Administradores pueden ver el ISBN).
     
 3.  **Transacciones (State Processors):** Crear Processors para asegurar que las Mutaciones complejas se ejecuten de forma atómica.
+
+
+## 🤝 Contribuciones
+
+¡Las contribuciones son bienvenidas! Si deseas ayudar a mejorar este proyecto, puedes hacerlo siguiendo estos pasos:
+
+1. Haz un fork del repositorio.
+2. Crea una nueva rama con tu feature o corrección: `git checkout -b nombre-de-tu-rama`
+3. Realiza tus cambios y realiza commits claros y descriptivos.
+4. Envía un pull request describiendo detalladamente tus modificaciones.
+
+Por favor, asegúrate de que tu código sigue las buenas prácticas, y si haces mejoras significativas, considera incluir pruebas o documentación adicional.
+
+---
+
+## 📝 Licencia
+
+Este proyecto está bajo la licencia MIT. Consulta el archivo `LICENSE` para más detalles.
+
+---
+
+¡Gracias por visitar y usar este proyecto! Si tienes dudas o sugerencias, no dudes en abrir un issue o contactar.
+
