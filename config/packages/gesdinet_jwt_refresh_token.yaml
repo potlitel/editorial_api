@@ -1,0 +1,19 @@
+# config/packages/gesdinet_jwt_refresh_token.yaml
+
+gesdinet_jwt_refresh_token:
+    # Tiempo de vida del Refresh Token (Ej: 1 mes = 2592000 segundos)
+    ttl: 2592000
+
+    # Campo del User con el que se relaciona el token (debe coincidir con tu UserProvider)
+    user_identity_field: email
+
+    # Clase de la entidad que el bundle usa para persistir el refresh token
+    refresh_token_class: Gesdinet\JWTRefreshTokenBundle\Entity\RefreshToken
+
+    # Especificamos el firewall que usará el refresh token
+    firewall: api
+
+    # Si quieres que se genere un nuevo refresh token en cada uso del endpoint de refresh.
+    single_use: true
+
+    # NOTA: Los endpoints /api/token/refresh y /api/login_check se configuran con pasos adicionales.
