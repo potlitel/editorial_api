@@ -8,6 +8,11 @@ use Doctrine\Persistence\ManagerRegistry;
 
 /**
  * @extends ServiceEntityRepository<Book>
+ *
+ * @method Book|null find($id, $lockMode = null, $lockVersion = null)
+ * @method Book|null findOneBy(array $criteria, array $orderBy = null)
+ * @method Book[]    findAll()
+ * @method Book[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
 class BookRepository extends ServiceEntityRepository
 {
@@ -16,28 +21,22 @@ class BookRepository extends ServiceEntityRepository
         parent::__construct($registry, Book::class);
     }
 
-//    /**
-//     * @return Book[] Returns an array of Book objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('b')
-//            ->andWhere('b.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('b.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
-
-//    public function findOneBySomeField($value): ?Book
-//    {
-//        return $this->createQueryBuilder('b')
-//            ->andWhere('b.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+    /**
+     * Busca libros cuyo título contenga la cadena de texto proporcionada (búsqueda parcial).
+     *
+     * @return Book[] Retorna un array de objetos Book.
+     */
+    public function findBooksByTitlePartial(string $title): array
+    {
+        // 1. Crear el QueryBuilder para la entidad Book (alias 'b')
+        return $this->createQueryBuilder('b')
+            // 2. Establecer la condición: b.title debe ser LIKE el parámetro
+            ->where('b.title LIKE :title')
+            // 3. Asignar el valor del parámetro, incluyendo comodines '%' para búsqueda parcial
+            ->setParameter('title', '%' . $title . '%')
+            // 4. Obtener el objeto Query
+            ->getQuery()
+            // 5. Devolver los resultados
+            ->getResult();
+    }
 }

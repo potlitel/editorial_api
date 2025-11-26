@@ -16,6 +16,9 @@ use ApiPlatform\Metadata\GraphQl\DeleteMutation;
 
 // 1. ANOTACIÓN DE EXPOSICIÓN A API PLATFORM / GRAPHQL
 #[ApiResource(
+    // DESHABILITAR ENDPOINTS REST ESTÁNDAR para forzar el uso de GraphQL para datos.
+    operations: [],
+
     // Definimos los grupos de serialización que se usarán por defecto
     normalizationContext: ['groups' => ['book:read', 'book:list']],
     denormalizationContext: ['groups' => ['book:write']],
@@ -24,6 +27,16 @@ use ApiPlatform\Metadata\GraphQl\DeleteMutation;
     graphQlOperations: [
         // Usar QueryCollection para la lista (deduce 'books')
         new QueryCollection(),
+        // 2. Query personalizada: Búsqueda de Libros por Título Parcial
+        new QueryCollection(
+            name: 'searchBooksByTitle',
+            // Especificamos el Handler que ejecutará la lógica de búsqueda
+            resolver: SearchBookByTitleQueryHandler::class,
+            // Definimos el argumento 'title' que es obligatorio (String!)
+            args: [
+                'title' => ['type' => 'String!', 'description' => 'Título parcial a buscar'],
+            ],
+        ),
         // Usar Query para la consulta por ID (deduce 'book')
         new Query(),
         new Mutation(name: 'create'),                       // Creación
