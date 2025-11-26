@@ -13,6 +13,7 @@ use Symfony\Component\Serializer\Annotation\Groups; // ¡Importante!
 use ApiPlatform\Metadata\GraphQl\Query;
 use ApiPlatform\Metadata\GraphQl\Mutation;
 use ApiPlatform\Metadata\GraphQl\DeleteMutation;
+use App\State\GenreSearchQueryProcessor;
 
 #[ApiResource(
     // Grupos que esta entidad expone
@@ -26,6 +27,22 @@ use ApiPlatform\Metadata\GraphQl\DeleteMutation;
         new Mutation(name: 'create'),                       // Creación
         new Mutation(name: 'update'),                       // Actualización
         new DeleteMutation(name: 'delete'),                 // Eliminación
+        // --- NUEVA CONSULTA GRAPHQL PERSONALIZADA ---
+        new Query(
+            name: 'searchGenres',
+            # Este es el nuevo nombre de la consulta en GraphQL: 'searchGenres'
+            # Es importante definir el tipo de salida (devolverá una lista de objetos Genre)
+            normalizationContext: ['groups' => ['genre:search']],
+            # El procesador que inyecta la lógica de búsqueda de tu repositorio
+            processor: GenreSearchQueryProcessor::class,
+            # Definir los argumentos que acepta la consulta (el término de búsqueda)
+            args: [
+                'term' => [
+                    'type' => 'String!',
+                    'description' => 'Término de búsqueda para filtrar géneros por nombre.'
+                ]
+            ]
+        ),
     ]
 )]
 #[ORM\Entity(repositoryClass: GenreRepository::class)]
