@@ -8,7 +8,11 @@ use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Serializer\Annotation\Groups; // ¡Importante!
+use Symfony\Component\Serializer\Annotation\Groups;
+
+// Interfaces de Seguridad REQUERIDAS
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 use ApiPlatform\Metadata\GraphQl\Query;
 use ApiPlatform\Metadata\GraphQl\QueryCollection;
@@ -16,21 +20,22 @@ use ApiPlatform\Metadata\GraphQl\Mutation;
 use ApiPlatform\Metadata\GraphQl\DeleteMutation;
 
 #[ApiResource(
-    // Grupos que esta entidad expone
+    // Operaciones GraphQL...
     normalizationContext: ['groups' => ['user:read', 'user:list']],
     denormalizationContext: ['groups' => ['user:write']],
 
-    // OPERACIONES GRAPHQL CORREGIDAS
     graphQlOperations: [
         new QueryCollection(),
         new Query(),
-        new Mutation(name: 'create'),                       // Creación
-        new Mutation(name: 'update'),                       // Actualización
-        new DeleteMutation(name: 'delete'),                 // Eliminación
+        new Mutation(name: 'create'),
+        new Mutation(name: 'update'),
+        new DeleteMutation(name: 'delete'),
     ]
 )]
 #[ORM\Entity(repositoryClass: UserRepository::class)]
-class User
+#[ORM\Table(name: '`user`')]
+// ¡¡¡CLAVE!!! Implementar las interfaces de seguridad
+class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -38,13 +43,15 @@ class User
     #[Groups(['user:read', 'user:list'])]
     private ?int $id = null;
 
-    #[ORM\Column(length: 255)]
-    // Dato sensible, visible solo en detalle para el usuario que lo consulta (o admin)
+    #[ORM\Column(length: 180, unique: true)]
     #[Groups(['user:read', 'user:write'])]
     private ?string $email = null;
 
+    // Nueva propiedad requerida para los roles en la DB
+    #[ORM\Column]
+    private array $roles = [];
+
     #[ORM\Column(length: 255)]
-    // Write-only: Nunca debe ser visible en la respuesta de lectura.
     #[Groups(['user:write'])]
     private ?string $password = null;
 
@@ -55,18 +62,14 @@ class User
     /**
      * @var Collection<int, self>
      */
-    // Users being followed by this user (OWNING SIDE)
     #[ORM\ManyToMany(targetEntity: self::class, inversedBy: 'users')]
-    // Solo se expone en la vista de detalle. Los usuarios anidados usarán 'user:list'.
     #[Groups(['user:read'])]
     private Collection $following;
 
     /**
      * @var Collection<int, self>
      */
-    // Users following this user (INVERSE SIDE / Followers)
     #[ORM\ManyToMany(targetEntity: self::class, mappedBy: 'following')]
-    // Solo se expone en la vista de detalle. Los usuarios anidados usarán 'user:list'.
     #[Groups(['user:read'])]
     private Collection $users; // Followers
 
@@ -93,7 +96,41 @@ class User
         return $this;
     }
 
-    public function getPassword(): ?string
+    // --- MÉTODOS DE SEGURIDAD REQUERIDOS POR INTERFACES ---
+    // (Asegúrate de que esta sección esté COMPLETAMENTE presente)
+
+    /**
+     * Implementación de UserInterface::getUserIdentifier().
+     * Retorna el campo único que identifica al usuario (e.g., email).
+     */
+    public function getUserIdentifier(): string
+    {
+        return (string) $this->email;
+    }
+
+    /**
+     * Implementación de UserInterface::getRoles().
+     */
+    public function getRoles(): array
+    {
+        $roles = $this->roles;
+        // Garantizamos que todo usuario tenga al menos el rol por defecto
+        $roles[] = 'ROLE_USER';
+
+        return array_unique($roles);
+    }
+
+    public function setRoles(array $roles): static
+    {
+        $this->roles = $roles;
+
+        return $this;
+    }
+
+    /**
+     * Implementación de PasswordAuthenticatedUserInterface::getPassword().
+     */
+    public function getPassword(): string
     {
         return $this->password;
     }
@@ -104,6 +141,16 @@ class User
 
         return $this;
     }
+
+    /**
+     * Implementación de UserInterface::eraseCredentials().
+     */
+    public function eraseCredentials(): void
+    {
+        // Se usa para limpiar datos sensibles (como la contraseña en texto plano) si estuviera en la entidad.
+    }
+
+    // --- FIN MÉTODOS DE SEGURIDAD ---
 
     public function getUsername(): ?string
     {
