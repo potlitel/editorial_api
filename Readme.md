@@ -26,6 +26,27 @@ Entendemos que los endpoints de datos básicos (CRUD) puedan aparecer en la docu
 
 El único _endpoint_ de seguridad que puede aparecer en Swagger es `/api/login_check`, ya que Api Platform lo inyecta para completar la documentación de autenticación, aunque se gestione manualmente.
 
+> Importante: Para **deshabilitar explícitamente** las rutas **REST** (como `/api/books`, `/api/books/{id}`, etc.) mientras mantienes **activos** tus `graphQlOperations`, debes realizar la siguiente configuración clave: Establece la propiedad `operations` a un **array vacío** (`[]`).
+
+```PHP
+#[ApiResource(
+    // 1. Deshabilitamos todas las operaciones REST estándar
+    operations: [], // <--- ¡Añadir esta línea!
+    
+    // 2. Mantenemos los contextos de serialización (necesarios para GraphQL)
+    normalizationContext: ['groups' => ['book:read', 'book:list']],
+    denormalizationContext: ['groups' => ['book:write']],
+
+    // 3. Mantenemos las operaciones GraphQL
+    graphQlOperations: [
+        new QueryCollection(), 
+        // ... resto de GraphQL operations ...
+    ]
+)]
+```
+
+Este mecanismo asegura que tu recurso **solo sea accesible** a través de **GraphQL**. ✨
+
 ### 1.2. Patrón de Manejo de Lógica (Mediator)
 
 Para implementar lógica de negocio que va más allá del CRUD básico (como búsquedas complejas o transacciones multi-entidad), utilizamos el patrón **Mediator**, implementado en Api Platform mediante:
