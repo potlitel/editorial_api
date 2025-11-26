@@ -8,8 +8,9 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups; // Importante para GraphQL
-// use ApiPlatform\Metadata\GraphQl\CollectionQuery;
+
 use ApiPlatform\Metadata\GraphQl\Query;
+use ApiPlatform\Metadata\GraphQl\QueryCollection;
 use ApiPlatform\Metadata\GraphQl\Mutation;
 use ApiPlatform\Metadata\GraphQl\DeleteMutation;
 
@@ -21,8 +22,10 @@ use ApiPlatform\Metadata\GraphQl\DeleteMutation;
 
     // OPERACIONES GRAPHQL CORREGIDAS
     graphQlOperations: [
-        new Query(name: 'collectionQuery'), // AP automáticamente deduce que si no tiene URI es colección
-        new Query(name: 'itemQuery'),                       // Obtener un recurso por ID
+        // Usar QueryCollection para la lista (deduce 'books')
+        new QueryCollection(),
+        // Usar Query para la consulta por ID (deduce 'book')
+        new Query(),
         new Mutation(name: 'create'),                       // Creación
         new Mutation(name: 'update'),                       // Actualización
         new DeleteMutation(name: 'delete'),                 // Eliminación
