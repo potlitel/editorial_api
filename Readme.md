@@ -47,6 +47,31 @@ El único _endpoint_ de seguridad que puede aparecer en Swagger es `/api/login_c
 
 Este mecanismo asegura que tu recurso **solo sea accesible** a través de **GraphQL**. ✨
 
+✅ **Verificación y Diagnóstico de Rutas** 🔍
+
+Después de aplicar la configuración para deshabilitar las rutas REST, es fundamental verificar que solo las operaciones de GraphQL permanezcan registradas.
+
+Utiliza el siguiente comando para inspeccionar todas las rutas disponibles en tu proyecto:
+
+### ⚙️ **Comando de Verificación**
+
+Bash
+
+    php bin/console debug:router
+
+> 🔎 Lo que debes esperar:
+> 
+> Al ejecutar este comando, las rutas REST que comienzan típicamente con /api/{recurso} (como /api/books) ya no deberían aparecer en la lista. Solo deberías ver rutas relacionadas con tus graphQlOperations y cualquier otra ruta estándar de tu aplicación (como rutas de login, homepage, etc.).
+
+### **En Resumen**
+
+| **Acción** | **Herramienta** | **Resultado Esperado** |
+| --- | --- | --- |
+| **Configurar** | Propiedad `operations: []` | Deshabilita REST. |
+| **Verificar** | `debug:router` | Rutas REST **eliminadas** de la lista. |
+
+Este paso refuerza la certeza de que tu **API está sirviendo exclusivamente a través de GraphQL**. 🛡️
+
 ### 1.2. Patrón de Manejo de Lógica (Mediator)
 
 Para implementar lógica de negocio que va más allá del CRUD básico (como búsquedas complejas o transacciones multi-entidad), utilizamos el patrón **Mediator**, implementado en Api Platform mediante:
