@@ -13,7 +13,6 @@ use Symfony\Component\DependencyInjection\Attribute\AsAlias;
  * 1. Extraer los argumentos (e.g., 'title') del contexto de GraphQL.
  * 2. Delegar la lógica de acceso a la base de datos al BookRepository.
  */
-#[AsAlias(id: self::class, public: true)]
 class SearchBookByTitleQueryHandler implements ProviderInterface
 {
     public function __construct(
@@ -28,7 +27,7 @@ class SearchBookByTitleQueryHandler implements ProviderInterface
      */
     public function provide(Operation $operation, array $uriVariables = [], array $context = []): object|array|null
     {
-        // 1. Verificar: Solo procesamos nuestra operación específica.
+        // 1. Verificar(Guard clause): Solo procesamos nuestra operación específica.
         if ($operation->getName() !== 'searchBooksByTitle') {
             return null;
         }
