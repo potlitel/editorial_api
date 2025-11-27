@@ -1,4 +1,18 @@
+# config/packages/lexik_jwt_authentication.yaml
+
 lexik_jwt_authentication:
-    secret_key: '%env(resolve:JWT_SECRET_KEY)%'
-    public_key: '%env(resolve:JWT_PUBLIC_KEY)%'
-    pass_phrase: '%env(JWT_PASSPHRASE)%'
+    # --- RUTAS DE CLAVES (Formato Moderno) ---
+    # La clave privada (secret_key) ahora se carga directamente desde una variable de entorno.
+    # Usaremos el operador '@file' en el .env para que cargue el contenido del archivo.
+    secret_key:       '%env(resolve:JWT_SECRET_KEY)%'
+
+    # La clave pública (public_key) también se carga de forma similar.
+    public_key:       '%env(resolve:JWT_PUBLIC_KEY)%'
+
+    # La passphrase sigue siendo necesaria si la clave privada está encriptada.
+    pass_phrase:      '%env(JWT_PASSPHRASE)%'
+
+    # --- OTRAS CONFIGURACIONES IMPORTANTES ---
+    token_ttl: 3600 # 1 hora
+
+    # ... otras configuraciones si las tienes
